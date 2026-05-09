@@ -546,17 +546,37 @@
         }
 
         async function copyStickerDirect(fileSrc, btn) {
+            const originalText = btn.innerText;
             try {
-                const response = await fetch(fileSrc);
+                // Tenta usar a Clipboard API moderna
+                const response = await fetch(fileSrc, { cache: 'no-cache' });
                 const blob = await response.blob();
-                await navigator.clipboard.write([
-                    new ClipboardItem({ [blob.type]: blob })
-                ]);
-                const originalText = btn.innerText;
+                
+                // Alguns browsers exigem que o ClipboardItem seja criado com um tipo específico
+                const data = [new ClipboardItem({ "image/png": blob })];
+                await navigator.clipboard.write(data);
+                
                 btn.innerText = '✓';
-                setTimeout(() => btn.innerText = originalText, 2000);
+                btn.style.background = '#28a745';
+                setTimeout(() => {
+                    btn.innerText = originalText;
+                    btn.style.background = '';
+                }, 2000);
             } catch (err) {
-                alert('Erro ao copiar. Tente baixar a imagem.');
+                console.error('Erro na cópia:', err);
+                // Fallback amigável para Mobile
+                btn.innerText = 'Pressione a imagem';
+                btn.style.background = '#ffc107';
+                btn.style.color = '#000';
+                
+                setTimeout(() => {
+                    btn.innerText = originalText;
+                    btn.style.background = '';
+                    btn.style.color = '';
+                }, 3000);
+                
+                // Alerta opcional para instruir o usuário
+                // alert('Dica: Em alguns celulares, você precisa pressionar o dedo na imagem e selecionar "Copiar Imagem".');
             }
         }
 
